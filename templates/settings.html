@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings | Student Portal</title>
+    <meta name="description" content="Configure system settings, theme gradients, and database backups.">
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+            animation: fadeInUp 0.5s ease both;
+        }
+        
+        .theme-swatch-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 12px;
+        }
+        
+        .theme-swatch {
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all var(--transition-base);
+            background: rgba(255,255,255,0.02);
+            color: var(--text-primary);
+        }
+        
+        .theme-swatch:hover {
+            border-color: var(--border-active);
+            transform: translateY(-2px);
+        }
+        
+        .theme-swatch.active {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+            background: rgba(99, 102, 241, 0.08);
+        }
+        
+        .swatch-preview {
+            height: 24px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 8px;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        /* Toggle Switch */
+        .switch-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .switch-container:last-child {
+            border-bottom: none;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255,255,255,0.1);
+            transition: .3s;
+            border-radius: 24px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--accent-primary);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Animated Background -->
+    <div class="bg-animated" id="bg-animated-orbs">
+        <div class="orb"></div>
+        <div class="orb"></div>
+        <div class="orb"></div>
+    </div>
+
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="/dashboard?user={{ username }}" class="sidebar-brand">
+                    <div class="brand-icon">🎓</div>
+                    <div>
+                        <div class="brand-text">EduPortal</div>
+                        <div class="brand-sub">Student Management</div>
+                    </div>
+                </a>
+            </div>
+            <button id="menuBtn">☰</button>
+            <nav class="sidebar-nav">
+                <div class="nav-section-title">Main</div>
+                <a href="/dashboard?user={{ username }}" class="nav-item" id="nav-dashboard">
+                    <span class="nav-icon">📊</span> Dashboard
+                </a>
+                <a href="/profile?user={{ username }}" class="nav-item" id="nav-profile">
+                    <span class="nav-icon">👤</span> My Profile
+                </a>
+                <a href="/students?user={{ username }}" class="nav-item" id="nav-students">
+                    <span class="nav-icon">👥</span> Students
+                    <span class="nav-badge">{{ total_students }}</span>
+                </a>
+
+                <div class="nav-section-title">Academics</div>
+                <a href="/courses?user={{ username }}" class="nav-item" id="nav-courses">
+                    <span class="nav-icon">📚</span> Courses
+                </a>
+                <a href="/schedule?user={{ username }}" class="nav-item" id="nav-schedule">
+                    <span class="nav-icon">📅</span> Schedule
+                </a>
+                <a href="/grades?user={{ username }}" class="nav-item" id="nav-grades">
+                    <span class="nav-icon">📝</span> Grades
+                </a>
+
+                <div class="nav-section-title">System</div>
+                <a href="/settings?user={{ username }}" class="nav-item active" id="nav-settings">
+                    <span class="nav-icon">⚙️</span> Settings
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="/profile?user={{ username }}" class="sidebar-user" id="sidebar-user-link">
+                    <div class="user-avatar">{{ username[0]|upper }}</div>
+                    <div class="user-info">
+                        <div class="user-name">{{ username }}</div>
+                        <div class="user-role">Administrator</div>
+                    </div>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <h2>Portal Settings</h2>
+                    <div class="breadcrumb">
+                        <a href="/dashboard?user={{ username }}">Dashboard</a>
+                        <span>/</span>
+                        <span>Settings</span>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <button class="topbar-btn" id="btn-notifications" title="Notifications">
+                        🔔
+                        <span class="badge-dot"></span>
+                    </button>
+                    <a href="/" class="topbar-btn" id="btn-logout" title="Logout">🚪</a>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <div class="settings-grid">
+                    
+                    <!-- Left Column: Theme & Performance Customization -->
+                    <div style="display: flex; flex-direction: column; gap: 24px;">
+                        
+                        <!-- Theme customizer card -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Visual Theme Customizer</h3>
+                            </div>
+                            <div class="card-body">
+                                <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
+                                    Select an accent color palette preset to customize the system borders, gradients, and ambient glows globally.
+                                </p>
+                                
+                                <div class="theme-swatch-grid">
+                                    <div class="theme-swatch" id="theme-indigo" onclick="changeThemePreset('indigo', 'linear-gradient(135deg, #6366f1, #8b5cf6, #a78bfa)')">
+                                        <div class="swatch-preview" style="background: linear-gradient(135deg, #6366f1, #8b5cf6, #a78bfa)"></div>
+                                        Indigo Glow
+                                    </div>
+                                    <div class="theme-swatch" id="theme-emerald" onclick="changeThemePreset('emerald', 'linear-gradient(135deg, #10b981, #059669, #34d399)')">
+                                        <div class="swatch-preview" style="background: linear-gradient(135deg, #10b981, #059669, #34d399)"></div>
+                                        Emerald Forest
+                                    </div>
+                                    <div class="theme-swatch" id="theme-crimson" onclick="changeThemePreset('crimson', 'linear-gradient(135deg, #f43f5e, #e11d48, #fb7185)')">
+                                        <div class="swatch-preview" style="background: linear-gradient(135deg, #f43f5e, #e11d48, #fb7185)"></div>
+                                        Crimson Flare
+                                    </div>
+                                    <div class="theme-swatch" id="theme-sunset" onclick="changeThemePreset('sunset', 'linear-gradient(135deg, #f59e0b, #ef4444, #f43f5e)')">
+                                        <div class="swatch-preview" style="background: linear-gradient(135deg, #f59e0b, #ef4444, #f43f5e)"></div>
+                                        Amber Sunset
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Performance Toggles -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Performance & Preferences</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="switch-container">
+                                    <div>
+                                        <div style="font-size: 14px; font-weight:600;">Floating Background Orbs</div>
+                                        <div style="font-size: 12px; color: var(--text-muted);">Enable dynamic ambient light particles.</div>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="orbToggleInput" onchange="toggleBackgroundOrbs()">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                <div class="switch-container">
+                                    <div>
+                                        <div style="font-size: 14px; font-weight:600;">Browser Notifications</div>
+                                        <div style="font-size: 12px; color: var(--text-muted);">Get notified when grades or settings change.</div>
+                                    </div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="notificationToggleInput" onchange="toggleBrowserNotifications()">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                    
+                    <!-- Right Column: Database Stats & System Maintenance -->
+                    <div style="display: flex; flex-direction: column; gap: 24px;">
+                        
+                        <!-- Database Information Card -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>System Database Overview</h3>
+                            </div>
+                            <div class="card-body">
+                                <ul class="info-list">
+                                    <li>
+                                        <span class="info-label">💾 Database Engine</span>
+                                        <span class="status-badge info" style="text-transform: uppercase;">{{ db_type }}</span>
+                                    </li>
+                                    <li>
+                                        <span class="info-label">👥 Total Registered Users</span>
+                                        <span class="info-value"><strong>{{ total_users }} Users</strong></span>
+                                    </li>
+                                    <li>
+                                        <span class="info-label">👥 Registered Students</span>
+                                        <span class="info-value"><strong>{{ total_students }} Students</strong></span>
+                                    </li>
+                                    <li>
+                                        <span class="info-label">📚 Tracked Courses</span>
+                                        <span class="info-value"><strong>{{ total_courses }} Courses</strong></span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <!-- Maintenance Operations Card (Reset) -->
+                        <div class="card" style="border: 1px solid rgba(239, 68, 68, 0.25);">
+                            <div class="card-header" style="background: rgba(239, 68, 68, 0.04);">
+                                <h3 style="color: #fca5a5;">System Danger Zone</h3>
+                            </div>
+                            <div class="card-body">
+                                <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
+                                    Reset all tables to their seed default variables. This removes all newly added students, customized profiles, and courses.
+                                </p>
+                                <button class="btn btn-danger btn-sm" onclick="factoryResetDatabase()" style="width: auto; padding: 10px 16px;">
+                                    ⚠️ Reset Database to Defaults
+                                </button>
+                            </div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+        // Check local storage setting presets on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedGradient = localStorage.getItem('theme-gradient');
+            const savedPreset = localStorage.getItem('theme-preset-id') || 'indigo';
+            const disableOrbs = localStorage.getItem('disable-orbs-animation') === 'true';
+            const enableNotifications = localStorage.getItem('enable-browser-notifications') === 'true';
+
+            // Apply theme gradient
+            if (savedGradient) {
+                document.documentElement.style.setProperty('--accent-gradient', savedGradient);
+            }
+            
+            // Mark correct swatch active
+            const activeSwatch = document.getElementById(`theme-${savedPreset}`);
+            if (activeSwatch) {
+                activeSwatch.classList.add('active');
+            }
+
+            // Apply Orb animation preference
+            const orbToggle = document.getElementById('orbToggleInput');
+            if (orbToggle) {
+                orbToggle.checked = !disableOrbs;
+                const orbContainer = document.getElementById('bg-animated-orbs');
+                if (orbContainer) {
+                    orbContainer.style.display = disableOrbs ? 'none' : 'block';
+                }
+            }
+            
+            // Apply notifications toggle state
+            const notificationToggle = document.getElementById('notificationToggleInput');
+            if (notificationToggle) {
+                notificationToggle.checked = enableNotifications;
+            }
+        });
+
+        // Toast notification system
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<span>${type === 'success' ? '✅' : '❌'}</span> ${message}`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(40px)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Change gradient values in localStorage and apply instantly
+        function changeThemePreset(presetId, gradientStr) {
+            // Remove active classes
+            document.querySelectorAll('.theme-swatch').forEach(swatch => swatch.classList.remove('active'));
+            
+            // Set active swatch class
+            const swatch = document.getElementById(`theme-${presetId}`);
+            if (swatch) {
+                swatch.classList.add('active');
+            }
+            
+            // Save settings
+            localStorage.setItem('theme-preset-id', presetId);
+            localStorage.setItem('theme-gradient', gradientStr);
+            
+            // Apply styles
+            document.documentElement.style.setProperty('--accent-gradient', gradientStr);
+            showToast(`Theme preset changed to ${presetId.toUpperCase()}!`, 'success');
+        }
+
+        // Toggle background light particles
+        function toggleBackgroundOrbs() {
+            const checked = document.getElementById('orbToggleInput').checked;
+            localStorage.setItem('disable-orbs-animation', !checked);
+            
+            const orbContainer = document.getElementById('bg-animated-orbs');
+            if (orbContainer) {
+                orbContainer.style.display = checked ? 'block' : 'none';
+            }
+            showToast(checked ? 'Background animations enabled.' : 'Background animations disabled (Eco Mode).', 'success');
+        }
+
+        // Toggle browser settings notifications status
+        function toggleBrowserNotifications() {
+            const checked = document.getElementById('notificationToggleInput').checked;
+            localStorage.setItem('enable-browser-notifications', checked);
+            showToast(checked ? 'System notifications enabled.' : 'System notifications muted.', 'success');
+        }
+
+        // Factory Reset DB AJAX
+        async function factoryResetDatabase() {
+            if (confirm("🚨 WARNING: This will completely erase all customized student records, courses, and settings. Are you absolutely sure?")) {
+                try {
+                    const response = await fetch('/settings/reset-db', {
+                        method: 'POST'
+                    });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        showToast(data.message, 'success');
+                        setTimeout(() => {
+                            // Redirect to login page to sync admin credentials
+                            window.location.href = '/';
+                        }, 2000);
+                    } else {
+                        showToast(data.message || 'Database reset failed.', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error resetting database:', error);
+                    showToast('An error occurred. Please try again.', 'error');
+                }
+            }
+        }
+
+        // Sidebar toggle
+        document.addEventListener("DOMContentLoaded", () => {
+            const menuBtn = document.getElementById("menuBtn");
+            const sidebar = document.getElementById("sidebar");
+            if (menuBtn && sidebar) {
+                menuBtn.addEventListener("click", () => {
+                    sidebar.classList.toggle("collapsed");
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

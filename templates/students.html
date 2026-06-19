@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Students | Student Portal</title>
+    <meta name="description" content="View, search, filter, and manage student records in EduPortal.">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+    <!-- Animated Background -->
+    <div class="bg-animated">
+        <div class="orb"></div>
+        <div class="orb"></div>
+        <div class="orb"></div>
+    </div>
+
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="/dashboard?user={{ username }}" class="sidebar-brand">
+                    <div class="brand-icon">🎓</div>
+                    <div>
+                        <div class="brand-text">EduPortal</div>
+                        <div class="brand-sub">Student Management</div>
+                    </div>
+                </a>
+            </div>
+            <button id="menuBtn">☰</button>
+            <nav class="sidebar-nav">
+                <div class="nav-section-title">Main</div>
+                <a href="/dashboard?user={{ username }}" class="nav-item" id="nav-dashboard">
+                    <span class="nav-icon">📊</span> Dashboard
+                </a>
+                <a href="/profile?user={{ username }}" class="nav-item" id="nav-profile">
+                    <span class="nav-icon">👤</span> My Profile
+                </a>
+                <a href="/students?user={{ username }}" class="nav-item active" id="nav-students">
+                    <span class="nav-icon">👥</span> Students
+                    <span class="nav-badge">{{ total_students }}</span>
+                </a>
+
+                <div class="nav-section-title">Academics</div>
+                <a href="/courses?user={{ username }}" class="nav-item" id="nav-courses">
+                    <span class="nav-icon">📚</span> Courses
+                </a>
+                <a href="/schedule?user={{ username }}" class="nav-item" id="nav-schedule">
+                    <span class="nav-icon">📅</span> Schedule
+                </a>
+                <a href="/grades?user={{ username }}" class="nav-item" id="nav-grades">
+                    <span class="nav-icon">📝</span> Grades
+                </a>
+
+                <div class="nav-section-title">System</div>
+                <a href="/settings?user={{ username }}" class="nav-item" id="nav-settings">
+                    <span class="nav-icon">⚙️</span> Settings
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="/profile?user={{ username }}" class="sidebar-user" id="sidebar-user-link">
+                    <div class="user-avatar">{{ username[0]|upper }}</div>
+                    <div class="user-info">
+                        <div class="user-name">{{ username }}</div>
+                        <div class="user-role">Administrator</div>
+                    </div>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <h2>Students Directory</h2>
+                    <div class="breadcrumb">
+                        <a href="/dashboard?user={{ username }}">Dashboard</a>
+                        <span>/</span>
+                        <span>Students</span>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <button class="topbar-btn" id="btn-notifications" title="Notifications">
+                        🔔
+                        <span class="badge-dot"></span>
+                    </button>
+                    <a href="/" class="topbar-btn" id="btn-logout" title="Logout">🚪</a>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <!-- Search & Actions Bar -->
+                <div class="card" style="margin-bottom: 24px; animation: fadeInUp 0.4s ease both;">
+                    <div class="card-body" style="padding: 16px 24px;">
+                        <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+                            <!-- Search and filters -->
+                            <div style="display: flex; gap: 12px; flex: 1; min-width: 280px; flex-wrap: wrap;">
+                                <div style="position: relative; flex: 1; min-width: 200px;">
+                                    <input type="text" id="studentSearchInput" placeholder="🔍 Search students by name or email..." 
+                                           style="width: 100%; padding: 10px 14px 10px 14px; background: var(--bg-glass); border: 1px solid var(--border-color); border-radius: var(--radius-md); color: var(--text-primary); outline: none; font-size: 14px;"
+                                           oninput="filterStudentsTable()">
+                                </div>
+                                <select id="statusFilter" onchange="filterStudentsTable()"
+                                        style="padding: 10px 16px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); color: var(--text-primary); outline: none; cursor: pointer; font-size: 14px;">
+                                    <option value="">All Statuses</option>
+                                    <option value="Active">Active</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Inactive">Inactive</option>
+                                </select>
+                            </div>
+                            <!-- Add Student Button -->
+                            <button class="btn btn-primary" onclick="openStudentModal()" style="width: auto; padding: 10px 20px; font-size: 14px; margin-top: 0;">
+                                ➕ Add New Student
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Students Table Card -->
+                <div class="card" style="animation: fadeInUp 0.5s ease both; animation-delay: 0.1s;">
+                    <div class="card-header">
+                        <h3>All Registered Students</h3>
+                    </div>
+                    <table class="data-table" id="students-directory-table">
+                        <thead>
+                            <tr>
+                                <th>Student Info</th>
+                                <th>Enrolled Course</th>
+                                <th>Status</th>
+                                <th>Grade</th>
+                                <th style="text-align: right; padding-right: 24px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                            <tr class="student-row" data-name="{{ student.name|lower }}" data-email="{{ student.email|lower }}" data-course="{{ student.course|lower }}" data-status="{{ student.status }}">
+                                <td>
+                                    <div class="student-cell">
+                                        {% set name_parts = student.name.split(' ') %}
+                                        {% set initials = (name_parts[0][0]|upper if name_parts|length > 0 else '')
+                                        + (name_parts[1][0]|upper if name_parts|length > 1 else '') %}
+                                        <div class="student-avatar av-{{ loop.index0 % 5 + 1 }}">{{ initials }}</div>
+                                        <div>
+                                            <div class="student-name">{{ student.name }}</div>
+                                            <div class="student-email">{{ student.email }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ student.course }}</td>
+                                <td><span class="status-badge {{ student.status.lower() }}">{{ student.status }}</span></td>
+                                <td><strong style="color: var(--accent-primary-hover)">{{ student.grade if student.grade else '-' }}</strong></td>
+                                <td style="text-align: right; padding-right: 24px;">
+                                    <div style="display: inline-flex; gap: 8px;">
+                                        <button class="btn btn-secondary btn-sm" onclick="openEditModal('{{ student.id }}', '{{ student.name }}', '{{ student.email }}', '{{ student.course }}', '{{ student.status }}', '{{ student.grade }}')">✏️ Edit</button>
+                                        <button class="btn btn-danger btn-sm" onclick="confirmDeleteStudent('{{ student.id }}', '{{ student.name }}')">🗑️ Delete</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr id="empty-state-row">
+                                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 48px 24px;">
+                                    <div style="font-size: 36px; margin-bottom: 8px;">👥</div>
+                                    No students found. Add a new student to get started.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            <tr id="no-search-results-row" style="display: none;">
+                                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 48px 24px;">
+                                    <div style="font-size: 32px; margin-bottom: 8px;">🔍</div>
+                                    No students match your search criteria.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Student Modal -->
+    <div id="studentModal" class="modal-overlay">
+        <div class="modal-content white-theme">
+            <div class="modal-header">
+                <h3>Add New Student</h3>
+                <button class="close-btn" onclick="closeStudentModal()">&times;</button>
+            </div>
+            <form id="add-student-form" onsubmit="submitStudentForm(event)">
+                <div class="modal-body">
+                    <div class="form-group-white">
+                        <label for="student-name">Full Name *</label>
+                        <input type="text" id="student-name" name="name" required placeholder="Full name">
+                    </div>
+                    <div class="form-group-white">
+                        <label for="student-email">Email Address *</label>
+                        <input type="email" id="student-email" name="email" required placeholder="Eg. arjun@email.com">
+                    </div>
+                    <div class="form-group-white">
+                        <label for="student-course">Course *</label>
+                        <select id="student-course" name="course" required style="width:100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; outline: none; font-size:14px;">
+                            {% for course in courses %}
+                            <option value="{{ course.name }}">{{ course.code }} - {{ course.name }}</option>
+                            {% else %}
+                            <option value="Computer Science">Computer Science</option>
+                            <option value="Data Science">Data Science</option>
+                            <option value="Mathematics">Mathematics</option>
+                            <option value="Physics">Physics</option>
+                            <option value="AI & ML">AI & ML</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-row-white">
+                        <div class="form-group-white" style="margin-bottom:0; flex: 1;">
+                            <label for="student-status">Status</label>
+                            <select id="student-status" name="status">
+                                <option value="Active">Active</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
+                        </div>
+                        <div class="form-group-white" style="margin-bottom:0; flex: 1;">
+                            <label for="student-grade">Grade</label>
+                            <input type="text" id="student-grade" name="grade" placeholder="Eg. A+">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer-white">
+                    <button type="submit" class="btn-white-submit" id="btn-add-student-submit">
+                        Add Student &rarr;
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Student Modal -->
+    <div id="editStudentModal" class="modal-overlay">
+        <div class="modal-content white-theme">
+            <div class="modal-header">
+                <h3>Edit Student Details</h3>
+                <button class="close-btn" onclick="closeEditModal()">&times;</button>
+            </div>
+            <form id="edit-student-form" onsubmit="submitEditForm(event)">
+                <input type="hidden" id="edit-student-id">
+                <div class="modal-body">
+                    <div class="form-group-white">
+                        <label for="edit-name">Full Name *</label>
+                        <input type="text" id="edit-name" name="name" required>
+                    </div>
+                    <div class="form-group-white">
+                        <label for="edit-email">Email Address *</label>
+                        <input type="email" id="edit-email" name="email" required>
+                    </div>
+                    <div class="form-group-white">
+                        <label for="edit-course">Course *</label>
+                        <select id="edit-course" name="course" required style="width:100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; outline: none; font-size:14px;">
+                            {% for course in courses %}
+                            <option value="{{ course.name }}">{{ course.code }} - {{ course.name }}</option>
+                            {% else %}
+                            <option value="Computer Science">Computer Science</option>
+                            <option value="Data Science">Data Science</option>
+                            <option value="Mathematics">Mathematics</option>
+                            <option value="Physics">Physics</option>
+                            <option value="AI & ML">AI & ML</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-row-white">
+                        <div class="form-group-white" style="margin-bottom:0; flex: 1;">
+                            <label for="edit-status">Status</label>
+                            <select id="edit-status" name="status">
+                                <option value="Active">Active</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
+                        </div>
+                        <div class="form-group-white" style="margin-bottom:0; flex: 1;">
+                            <label for="edit-grade">Grade</label>
+                            <input type="text" id="edit-grade" name="grade">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer-white">
+                    <button type="submit" class="btn-white-submit">
+                        Save Changes &rarr;
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+        // Load custom theme settings on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const theme = localStorage.getItem('theme-gradient');
+            if (theme) {
+                document.documentElement.style.setProperty('--accent-gradient', theme);
+            }
+        });
+
+        // Toast notification system
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<span>${type === 'success' ? '✅' : '❌'}</span> ${message}`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(40px)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Live search and status filter
+        function filterStudentsTable() {
+            const query = document.getElementById('studentSearchInput').value.toLowerCase().trim();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const rows = document.querySelectorAll('.student-row');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const name = row.getAttribute('data-name');
+                const email = row.getAttribute('data-email');
+                const course = row.getAttribute('data-course');
+                const status = row.getAttribute('data-status');
+
+                const matchesQuery = name.includes(query) || email.includes(query) || course.includes(query);
+                const matchesStatus = !statusFilter || status === statusFilter;
+
+                if (matchesQuery && matchesStatus) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Handle empty search results state
+            const noResultsRow = document.getElementById('no-search-results-row');
+            if (noResultsRow) {
+                if (visibleCount === 0 && rows.length > 0) {
+                    noResultsRow.style.display = '';
+                } else {
+                    noResultsRow.style.display = 'none';
+                }
+            }
+        }
+
+        // Add Student Modal functions
+        function openStudentModal() {
+            document.getElementById('studentModal').classList.add('active');
+            document.getElementById('student-name').focus();
+        }
+
+        function closeStudentModal() {
+            document.getElementById('studentModal').classList.remove('active');
+            document.getElementById('add-student-form').reset();
+        }
+
+        // Add student submit AJAX
+        async function submitStudentForm(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch('/students/add', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    closeStudentModal();
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    showToast(data.message || 'Failed to add student.', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('An error occurred. Please try again.', 'error');
+            }
+        }
+
+        // Edit Student Modal functions
+        function openEditModal(id, name, email, course, status, grade) {
+            document.getElementById('edit-student-id').value = id;
+            document.getElementById('edit-name').value = name;
+            document.getElementById('edit-email').value = email;
+            document.getElementById('edit-course').value = course;
+            document.getElementById('edit-status').value = status;
+            document.getElementById('edit-grade').value = grade;
+            document.getElementById('editStudentModal').classList.add('active');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editStudentModal').classList.remove('active');
+            document.getElementById('edit-student-form').reset();
+        }
+
+        // Edit student submit AJAX
+        async function submitEditForm(event) {
+            event.preventDefault();
+            const id = document.getElementById('edit-student-id').value;
+            const form = event.target;
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch(`/students/edit/${id}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    closeEditModal();
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    showToast(data.message || 'Failed to update student.', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('An error occurred. Please try again.', 'error');
+            }
+        }
+
+        // Confirm and delete student AJAX
+        async function confirmDeleteStudent(id, name) {
+            if (confirm(`Are you sure you want to delete student "${name}"? This action cannot be undone.`)) {
+                try {
+                    const response = await fetch(`/students/delete/${id}`, {
+                        method: 'POST'
+                    });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        showToast(data.message, 'success');
+                        setTimeout(() => window.location.reload(), 1000);
+                    } else {
+                        showToast(data.message || 'Failed to delete student.', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showToast('An error occurred. Please try again.', 'error');
+                }
+            }
+        }
+
+        // Close modals on clicking overlay background
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeStudentModal();
+                    closeEditModal();
+                }
+            });
+        });
+
+        // Sidebar toggle
+        document.addEventListener("DOMContentLoaded", () => {
+            const menuBtn = document.getElementById("menuBtn");
+            const sidebar = document.getElementById("sidebar");
+            if (menuBtn && sidebar) {
+                menuBtn.addEventListener("click", () => {
+                    sidebar.classList.toggle("collapsed");
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

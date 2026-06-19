@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grades | Student Portal</title>
+    <meta name="description" content="View student academic grades and class distribution statistics.">
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .grades-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        
+        .grade-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            text-align: center;
+            transition: all var(--transition-base);
+        }
+        
+        .grade-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--border-active);
+        }
+        
+        .grade-card-val {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        
+        .grade-card-lbl {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        /* Select wrapper styling inside table */
+        .grade-select {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+            transition: all var(--transition-fast);
+        }
+        
+        .grade-select:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Animated Background -->
+    <div class="bg-animated">
+        <div class="orb"></div>
+        <div class="orb"></div>
+        <div class="orb"></div>
+    </div>
+
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="/dashboard?user={{ username }}" class="sidebar-brand">
+                    <div class="brand-icon">🎓</div>
+                    <div>
+                        <div class="brand-text">EduPortal</div>
+                        <div class="brand-sub">Student Management</div>
+                    </div>
+                </a>
+            </div>
+            <button id="menuBtn">☰</button>
+            <nav class="sidebar-nav">
+                <div class="nav-section-title">Main</div>
+                <a href="/dashboard?user={{ username }}" class="nav-item" id="nav-dashboard">
+                    <span class="nav-icon">📊</span> Dashboard
+                </a>
+                <a href="/profile?user={{ username }}" class="nav-item" id="nav-profile">
+                    <span class="nav-icon">👤</span> My Profile
+                </a>
+                <a href="/students?user={{ username }}" class="nav-item" id="nav-students">
+                    <span class="nav-icon">👥</span> Students
+                    <span class="nav-badge">{{ total_students }}</span>
+                </a>
+
+                <div class="nav-section-title">Academics</div>
+                <a href="/courses?user={{ username }}" class="nav-item" id="nav-courses">
+                    <span class="nav-icon">📚</span> Courses
+                </a>
+                <a href="/schedule?user={{ username }}" class="nav-item" id="nav-schedule">
+                    <span class="nav-icon">📅</span> Schedule
+                </a>
+                <a href="/grades?user={{ username }}" class="nav-item active" id="nav-grades">
+                    <span class="nav-icon">📝</span> Grades
+                </a>
+
+                <div class="nav-section-title">System</div>
+                <a href="/settings?user={{ username }}" class="nav-item" id="nav-settings">
+                    <span class="nav-icon">⚙️</span> Settings
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="/profile?user={{ username }}" class="sidebar-user" id="sidebar-user-link">
+                    <div class="user-avatar">{{ username[0]|upper }}</div>
+                    <div class="user-info">
+                        <div class="user-name">{{ username }}</div>
+                        <div class="user-role">Administrator</div>
+                    </div>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <h2>Grade Registry</h2>
+                    <div class="breadcrumb">
+                        <a href="/dashboard?user={{ username }}">Dashboard</a>
+                        <span>/</span>
+                        <span>Grades</span>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <button class="topbar-btn" id="btn-notifications" title="Notifications">
+                        🔔
+                        <span class="badge-dot"></span>
+                    </button>
+                    <a href="/" class="topbar-btn" id="btn-logout" title="Logout">🚪</a>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <!-- Grade Stats Header -->
+                <div class="grades-grid">
+                    <div class="grade-card" style="border-left: 3px solid #10b981;">
+                        <div class="grade-card-val">{{ distribution.A }}</div>
+                        <div class="grade-card-lbl">Excellent (A+, A, A-)</div>
+                    </div>
+                    <div class="grade-card" style="border-left: 3px solid #6366f1;">
+                        <div class="grade-card-val">{{ distribution.B }}</div>
+                        <div class="grade-card-lbl">Good (B+, B, B-)</div>
+                    </div>
+                    <div class="grade-card" style="border-left: 3px solid #3b82f6;">
+                        <div class="grade-card-val">{{ distribution.C }}</div>
+                        <div class="grade-card-lbl">Satisfactory (C+, C, C-)</div>
+                    </div>
+                    <div class="grade-card" style="border-left: 3px solid #ef4444;">
+                        <div class="grade-card-val">{{ distribution.D_F }}</div>
+                        <div class="grade-card-lbl">Needs Improvement (D, F)</div>
+                    </div>
+                    <div class="grade-card" style="border-left: 3px solid #f59e0b;">
+                        <div class="grade-card-val">{{ distribution.None }}</div>
+                        <div class="grade-card-lbl">Not Graded</div>
+                    </div>
+                </div>
+
+                <!-- Search & Filters -->
+                <div class="card" style="margin-bottom: 24px; animation: fadeInUp 0.4s ease both;">
+                    <div class="card-body" style="padding: 16px 24px;">
+                        <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+                            <!-- Search -->
+                            <div style="position: relative; flex: 1; min-width: 280px;">
+                                <input type="text" id="gradeStudentSearch" placeholder="🔍 Filter student grades by name or course..." 
+                                       style="width: 100%; padding: 10px 14px 10px 14px; background: var(--bg-glass); border: 1px solid var(--border-color); border-radius: var(--radius-md); color: var(--text-primary); outline: none; font-size: 14px;"
+                                       oninput="filterGradesTable()">
+                            </div>
+                            
+                            <!-- Overall Metrics -->
+                            <div style="display: flex; gap: 24px; align-items: center;">
+                                <div style="font-size: 14px; color: var(--text-secondary);">
+                                    Graded Students: <strong style="color: var(--text-primary)">{{ graded_count }} / {{ total_students }}</strong>
+                                </div>
+                                <div style="font-size: 14px; color: var(--text-secondary);">
+                                    Target Pass Rate: <strong style="color: var(--success)">{{ pass_rate }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Student Grade Table -->
+                <div class="card" style="animation: fadeInUp 0.5s ease both; animation-delay: 0.1s;">
+                    <div class="card-header">
+                        <h3>Student Grading Directory</h3>
+                    </div>
+                    <table class="data-table" id="grades-directory-table">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Course</th>
+                                <th>Status</th>
+                                <th>Current Grade</th>
+                                <th style="text-align: right; padding-right: 36px;">Change Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                            <tr class="grade-row" data-name="{{ student.name|lower }}" data-course="{{ student.course|lower }}">
+                                <td>
+                                    <div class="student-cell">
+                                        {% set name_parts = student.name.split(' ') %}
+                                        {% set initials = (name_parts[0][0]|upper if name_parts|length > 0 else '')
+                                        + (name_parts[1][0]|upper if name_parts|length > 1 else '') %}
+                                        <div class="student-avatar av-{{ loop.index0 % 5 + 1 }}">{{ initials }}</div>
+                                        <div>
+                                            <div class="student-name">{{ student.name }}</div>
+                                            <div class="student-email">{{ student.email }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ student.course }}</td>
+                                <td><span class="status-badge {{ student.status.lower() }}">{{ student.status }}</span></td>
+                                <td id="grade-display-{{ student.id }}">
+                                    {% if student.grade %}
+                                    <strong style="color: var(--accent-primary-hover); font-size: 16px;">{{ student.grade }}</strong>
+                                    {% else %}
+                                    <span style="color: var(--text-muted); font-size: 13px;">Not Graded</span>
+                                    {% endif %}
+                                </td>
+                                <td style="text-align: right; padding-right: 36px;">
+                                    <select class="grade-select" onchange="updateStudentGrade('{{ student.id }}', this.value)">
+                                        <option value="" {% if not student.grade %}selected{% endif %}>None (Ungraded)</option>
+                                        <option value="A+" {% if student.grade == 'A+' %}selected{% endif %}>A+</option>
+                                        <option value="A" {% if student.grade == 'A' %}selected{% endif %}>A</option>
+                                        <option value="A-" {% if student.grade == 'A-' %}selected{% endif %}>A-</option>
+                                        <option value="B+" {% if student.grade == 'B+' %}selected{% endif %}>B+</option>
+                                        <option value="B" {% if student.grade == 'B' %}selected{% endif %}>B</option>
+                                        <option value="B-" {% if student.grade == 'B-' %}selected{% endif %}>B-</option>
+                                        <option value="C+" {% if student.grade == 'C+' %}selected{% endif %}>C+</option>
+                                        <option value="C" {% if student.grade == 'C' %}selected{% endif %}>C</option>
+                                        <option value="C-" {% if student.grade == 'C-' %}selected{% endif %}>C-</option>
+                                        <option value="D" {% if student.grade == 'D' %}selected{% endif %}>D</option>
+                                        <option value="F" {% if student.grade == 'F' %}selected{% endif %}>F</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 48px 24px;">
+                                    <div style="font-size: 32px; margin-bottom: 8px;">📝</div>
+                                    No students available to grade. Add students first.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            <tr id="grades-no-results-row" style="display: none;">
+                                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 48px 24px;">
+                                    <div style="font-size: 32px; margin-bottom: 8px;">🔍</div>
+                                    No student matches your search query.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+        // Set accent gradient from local storage if existing
+        document.addEventListener('DOMContentLoaded', () => {
+            const theme = localStorage.getItem('theme-gradient');
+            if (theme) {
+                document.documentElement.style.setProperty('--accent-gradient', theme);
+            }
+        });
+
+        // Toast notification system
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<span>${type === 'success' ? '✅' : '❌'}</span> ${message}`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(40px)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Live table filtering
+        function filterGradesTable() {
+            const query = document.getElementById('gradeStudentSearch').value.toLowerCase().trim();
+            const rows = document.querySelectorAll('.grade-row');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const name = row.getAttribute('data-name');
+                const course = row.getAttribute('data-course');
+
+                const matches = name.includes(query) || course.includes(query);
+
+                if (matches) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Handle empty results matching
+            const noResultsRow = document.getElementById('grades-no-results-row');
+            if (noResultsRow) {
+                if (visibleCount === 0 && rows.length > 0) {
+                    noResultsRow.style.display = '';
+                } else {
+                    noResultsRow.style.display = 'none';
+                }
+            }
+        }
+
+        // Update student grade AJAX
+        async function updateStudentGrade(studentId, newGrade) {
+            const formData = new FormData();
+            formData.append('student_id', studentId);
+            formData.append('grade', newGrade);
+
+            try {
+                const response = await fetch('/grades/update', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    
+                    // Dynamically update the grade cell text
+                    const displayCell = document.getElementById(`grade-display-${studentId}`);
+                    if (displayCell) {
+                        if (newGrade) {
+                            displayCell.innerHTML = `<strong style="color: var(--accent-primary-hover); font-size: 16px;">${newGrade}</strong>`;
+                        } else {
+                            displayCell.innerHTML = `<span style="color: var(--text-muted); font-size: 13px;">Not Graded</span>`;
+                        }
+                    }
+                    
+                    // Reload to update stats summary cards after 1.5 seconds
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    showToast(data.message || 'Failed to update grade.', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('An error occurred. Please try again.', 'error');
+            }
+        }
+
+        // Sidebar toggle
+        document.addEventListener("DOMContentLoaded", () => {
+            const menuBtn = document.getElementById("menuBtn");
+            const sidebar = document.getElementById("sidebar");
+            if (menuBtn && sidebar) {
+                menuBtn.addEventListener("click", () => {
+                    sidebar.classList.toggle("collapsed");
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile | Student Portal</title>
+    <meta name="description" content="View and manage your student profile, academic progress, and account settings.">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    {% set username = username if username is defined else (user.username if user else 'admin') %}
+
+    <!-- Animated Background -->
+    <div class="bg-animated">
+        <div class="orb"></div>
+        <div class="orb"></div>
+        <div class="orb"></div>
+    </div>
+
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="/dashboard" class="sidebar-brand">
+                    <div class="brand-icon">🎓</div>
+                    <div>
+                        <div class="brand-text">EduPortal</div>
+                        <div class="brand-sub">Student Management</div>
+                    </div>
+                </a>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section-title">Main</div>
+                <a href="/dashboard?user={{ username }}" class="nav-item" id="nav-dashboard">
+                    <span class="nav-icon">📊</span> Dashboard
+                </a>
+                <a href="/profile?user={{ username }}" class="nav-item active" id="nav-profile">
+                    <span class="nav-icon">👤</span> My Profile
+                </a>
+                <a href="/students?user={{ username }}" class="nav-item" id="nav-students">
+                    <span class="nav-icon">👥</span> Students
+                    <span class="nav-badge">{{ total_students }}</span>
+                </a>
+
+                <div class="nav-section-title">Academics</div>
+                <a href="/courses?user={{ username }}" class="nav-item" id="nav-courses">
+                    <span class="nav-icon">📚</span> Courses
+                </a>
+                <a href="/schedule?user={{ username }}" class="nav-item" id="nav-schedule">
+                    <span class="nav-icon">📅</span> Schedule
+                </a>
+                <a href="/grades?user={{ username }}" class="nav-item" id="nav-grades">
+                    <span class="nav-icon">📝</span> Grades
+                </a>
+
+                <div class="nav-section-title">System</div>
+                <a href="/settings?user={{ username }}" class="nav-item" id="nav-settings">
+                    <span class="nav-icon">⚙️</span> Settings
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="/profile?user={{ username }}" class="sidebar-user" id="sidebar-user-link">
+                    <div class="user-avatar">{{ username[0]|upper }}</div>
+                    <div class="user-info">
+                        <div class="user-name">{{ username }}</div>
+                        <div class="user-role">Administrator</div>
+                    </div>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <h2>My Profile</h2>
+                    <div class="breadcrumb">
+                        <a href="/dashboard?user={{ username }}">Dashboard</a>
+                        <span>/</span>
+                        <span>Profile</span>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <button class="topbar-btn" id="btn-notifications" title="Notifications">
+                        🔔
+                        <span class="badge-dot"></span>
+                    </button>
+                    <a href="/" class="topbar-btn" id="btn-logout" title="Logout">🚪</a>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <!-- Profile Header -->
+                <div class="profile-header">
+                    <div class="profile-banner">
+                        <div class="profile-banner-pattern"></div>
+                    </div>
+                    <div class="profile-info-bar">
+                        <div class="profile-avatar-lg" id="profile-avatar">{{ username[0]|upper }}</div>
+                        <div class="profile-meta">
+                            <h2 id="profile-display-name">{{ username }}</h2>
+                            <p>Administrator • Computer Science Department</p>
+                        </div>
+                        <div class="profile-actions">
+                            <button class="btn btn-secondary btn-sm" id="btn-edit-profile" onclick="toggleEdit()">✏️
+                                Edit Profile</button>
+                            <a href="/" class="btn btn-danger btn-sm" id="btn-logout-profile">🚪 Logout</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile Tabs -->
+                <div class="profile-tabs" id="profile-tabs">
+                    <button class="profile-tab active" data-tab="overview"
+                        onclick="switchTab('overview')">Overview</button>
+                    <button class="profile-tab" data-tab="academic" onclick="switchTab('academic')">Academic</button>
+                    <button class="profile-tab" data-tab="settings" onclick="switchTab('settings')">Settings</button>
+                </div>
+
+                <!-- Overview Tab -->
+                <div class="tab-content active" id="tab-overview">
+                    <div class="profile-grid">
+                        <!-- Personal Info -->
+                        <div class="profile-section">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3>Personal Information</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div id="info-view">
+                                        <ul class="info-list">
+                                            <li>
+                                                <span class="info-label">👤 Full Name</span>
+                                                <span class="info-value" id="info-name">{{ username }}</span>
+                                            </li>
+                                            <li>
+                                                <span class="info-label">📧 Email</span>
+                                                <span class="info-value" id="info-email">{{ user.email if user and
+                                                    user.email else username ~ '@eduportal.com' }}</span>
+                                            </li>
+                                            <li>
+                                                <span class="info-label">📱 Phone</span>
+                                                <span class="info-value" id="info-phone">{{ user.phone if user and
+                                                    user.phone else 'Not provided' }}</span>
+                                            </li>
+                                            <li>
+                                                <span class="info-label">📍 Location</span>
+                                                <span class="info-value" id="info-location">{{ user.location if user and
+                                                    user.location else 'Not provided' }}</span>
+                                            </li>
+                                            <li>
+                                                <span class="info-label">📝 Bio</span>
+                                                <span class="info-value" id="info-bio">{{ user.bio if user and user.bio
+                                                    else 'Not provided' }}</span>
+                                            </li>
+                                            <li>
+                                                <span class="info-label">🎂 Date of Birth</span>
+                                                <span class="info-value" id="info-dob">15 March 1998</span>
+                                            </li>
+                                            <li>
+                                                <span class="info-label">🆔 Student ID</span>
+                                                <span class="info-value" id="info-sid">STU-2024-001</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+
+                                    <!-- Edit Form (hidden by default) -->
+                                    <div id="info-edit" style="display: none;">
+                                        <form action="/save-profile" method="post">
+                                            <input type="hidden" name="original_username" value="{{ user.username }}">
+                                            <div class="form-row">
+                                                <div class="form-group-profile">
+                                                    <label for="edit-name">Full Name</label>
+                                                    <input type="text" id="edit-name" value="{{ user.username }}"
+                                                        name="username">
+                                                </div>
+                                                <div class="form-group-profile">
+                                                    <label for="edit-email">Email</label>
+                                                    <input type="email" id="edit-email" value="{{ user.email }}"
+                                                        name="email">
+                                                </div>
+                                            </div>
+                                            <div class="form-row">
+                                                <div class="form-group-profile">
+                                                    <label for="edit-phone">Phone</label>
+                                                    <input type="tel" id="edit-phone" value="{{user.phone}}"
+                                                        name="phone">
+                                                </div>
+                                                <div class="form-group-profile">
+                                                    <label for="edit-location">Location</label>
+                                                    <input type="text" id="edit-location" value="{{user.location}}"
+                                                        name="location">
+                                                </div>
+                                            </div>
+                                            <div class="form-group-profile">
+                                                <label for="edit-bio">Bio</label>
+                                                <textarea id="edit-bio" placeholder="Tell us about yourself..."
+                                                    name="bio">{{user.bio}}</textarea>
+                                            </div>
+                                            <div
+                                                style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px;">
+                                                <button type="button" class="btn btn-secondary btn-sm"
+                                                    onclick="toggleEdit()">Cancel</button>
+                                                <button type="submit" class="btn btn-primary btn-sm"
+                                                    id="btn-save-profile" style="width: auto;">Save Changes</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column -->
+                        <div class="profile-section">
+                            <!-- Skills -->
+                            <div class="card" style="margin-bottom: 24px;">
+                                <div class="card-header">
+                                    <h3>Skills & Expertise</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="skills-grid" id="skills-grid">
+                                        <span class="skill-tag">Python</span>
+                                        <span class="skill-tag">FastAPI</span>
+                                        <span class="skill-tag">JavaScript</span>
+                                        <span class="skill-tag">Machine Learning</span>
+                                        <span class="skill-tag">SQL</span>
+                                        <span class="skill-tag">Data Analysis</span>
+                                        <span class="skill-tag">React</span>
+                                        <span class="skill-tag">Docker</span>
+                                        <span class="skill-tag">Git</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Account Info -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3>Account Details</h3>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="info-list">
+                                        <li>
+                                            <span class="info-label">🔐 Role</span>
+                                            <span class="status-badge active">Administrator</span>
+                                        </li>
+                                        <li>
+                                            <span class="info-label">📅 Joined</span>
+                                            <span class="info-value">January 2024</span>
+                                        </li>
+                                        <li>
+                                            <span class="info-label">🕐 Last Login</span>
+                                            <span class="info-value">Today, just now</span>
+                                        </li>
+                                        <li>
+                                            <span class="info-label">🔒 2FA</span>
+                                            <span class="status-badge active">Enabled</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Academic Tab -->
+                <div class="tab-content" id="tab-academic">
+                    <div class="profile-grid">
+                        <div class="profile-section">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3>Academic Progress</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="progress-item">
+                                        <div class="progress-label">
+                                            <span>Computer Science</span>
+                                            <span>92%</span>
+                                        </div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 92%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="progress-item">
+                                        <div class="progress-label">
+                                            <span>Data Structures</span>
+                                            <span>87%</span>
+                                        </div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill green" style="width: 87%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="progress-item">
+                                        <div class="progress-label">
+                                            <span>Machine Learning</span>
+                                            <span>78%</span>
+                                        </div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill blue" style="width: 78%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="progress-item">
+                                        <div class="progress-label">
+                                            <span>Web Development</span>
+                                            <span>95%</span>
+                                        </div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill purple" style="width: 95%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="progress-item">
+                                        <div class="progress-label">
+                                            <span>Database Systems</span>
+                                            <span>83%</span>
+                                        </div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill amber" style="width: 83%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="profile-section">
+                            <div class="card" style="margin-bottom: 24px;">
+                                <div class="card-header">
+                                    <h3>Semester Overview</h3>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="info-list">
+                                        <li>
+                                            <span class="info-label">📊 Current GPA</span>
+                                            <span class="info-value"
+                                                style="font-size: 18px; font-weight: 700; color: var(--success);">3.85</span>
+                                        </li>
+                                        <li>
+                                            <span class="info-label">📚 Courses Enrolled</span>
+                                            <span class="info-value">5</span>
+                                        </li>
+                                        <li>
+                                            <span class="info-label">✅ Credits Completed</span>
+                                            <span class="info-value">96 / 120</span>
+                                        </li>
+                                        <li>
+                                            <span class="info-label">🏆 Achievements</span>
+                                            <span class="info-value">Dean's List</span>
+                                        </li>
+                                        <li>
+                                            <span class="info-label">📅 Expected Graduation</span>
+                                            <span class="info-value">May 2026</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3>Recent Submissions</h3>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="activity-list">
+                                        <li class="activity-item">
+                                            <div class="activity-dot green"></div>
+                                            <div>
+                                                <div class="activity-text">Submitted <strong>ML Assignment 4</strong>
+                                                </div>
+                                                <div class="activity-time">Score: 95/100 • 2 days ago</div>
+                                            </div>
+                                        </li>
+                                        <li class="activity-item">
+                                            <div class="activity-dot blue"></div>
+                                            <div>
+                                                <div class="activity-text">Completed <strong>DSA Quiz 6</strong></div>
+                                                <div class="activity-time">Score: 88/100 • 5 days ago</div>
+                                            </div>
+                                        </li>
+                                        <li class="activity-item">
+                                            <div class="activity-dot purple"></div>
+                                            <div>
+                                                <div class="activity-text">Submitted <strong>Web Dev Project</strong>
+                                                </div>
+                                                <div class="activity-time">Score: 98/100 • 1 week ago</div>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Tab -->
+                <div class="tab-content" id="tab-settings">
+                    <div class="profile-grid">
+                        <div class="profile-section">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3>Account Settings</h3>
+                                </div>
+                                <div class="card-body">
+                                    <form id="settings-form" onsubmit="saveSettings(event)">
+                                        <div class="form-group-profile">
+                                            <label for="settings-username">Username</label>
+                                            <input type="text" id="settings-username" value="{{ username }}" disabled>
+                                        </div>
+                                        <div class="form-group-profile">
+                                            <label for="settings-email">Email Address</label>
+                                            <input type="email" id="settings-email"
+                                                value="{{ username }}@eduportal.com">
+                                        </div>
+                                        <div class="form-group-profile">
+                                            <label for="settings-language">Language</label>
+                                            <select id="settings-language">
+                                                <option value="en" selected>English</option>
+                                                <option value="hi">Hindi</option>
+                                                <option value="te">Telugu</option>
+                                            </select>
+                                        </div>
+                                        <div
+                                            style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px;">
+                                            <button type="submit" class="btn btn-primary btn-sm" id="btn-save-settings"
+                                                style="width: auto;">💾 Save Settings</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="profile-section">
+                            <div class="card" style="margin-bottom: 24px;">
+                                <div class="card-header">
+                                    <h3>Change Password</h3>
+                                </div>
+                                <div class="card-body">
+                                    <form id="password-form" action="/change-password" method="POST"
+                                        onsubmit="return validatePasswordMatch()">
+                                        <input type="hidden" name="username" value="{{ username }}">
+                                        <div class="form-group-profile">
+                                            <label for="current-password">Current Password</label>
+                                            <input type="password" id="current-password" name="current_password"
+                                                placeholder="Enter current password" required>
+                                        </div>
+                                        <div class="form-group-profile">
+                                            <label for="new-password">New Password</label>
+                                            <input type="password" id="new-password" name="new_password"
+                                                placeholder="Enter new password" required minlength="4">
+                                        </div>
+                                        <div class="form-group-profile">
+                                            <label for="confirm-password">Confirm Password</label>
+                                            <input type="password" id="confirm-password"
+                                                placeholder="Confirm new password" required minlength="4">
+                                        </div>
+                                        <div
+                                            style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px;">
+                                            <button type="submit" class="btn btn-primary btn-sm"
+                                                id="btn-change-password" style="width: auto;">🔒 Update
+                                                Password</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3>Danger Zone</h3>
+                                </div>
+                                <div class="card-body">
+                                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+                                        Once you delete your account, there is no going back. Please be certain.
+                                    </p>
+                                    <button class="btn btn-danger btn-sm" id="btn-delete-account"
+                                        onclick="deleteUser('{{ user.id }}')">
+                                        🗑️ Delete Account
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+        // Tab switching
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.profile-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.tab === tabName);
+            });
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.toggle('active', content.id === `tab-${tabName}`);
+            });
+        }
+
+        // Toggle edit mode
+        let isEditing = false;
+        function toggleEdit() {
+            isEditing = !isEditing;
+            document.getElementById('info-view').style.display = isEditing ? 'none' : 'block';
+            document.getElementById('info-edit').style.display = isEditing ? 'block' : 'none';
+            document.getElementById('btn-edit-profile').innerHTML = isEditing ? '✕ Cancel' : '✏️ Edit Profile';
+        }
+
+
+
+        // Save settings
+        function saveSettings(e) {
+            e.preventDefault();
+            showToast('Settings saved successfully!', 'success');
+        }
+
+        // Change password validation
+        function validatePasswordMatch() {
+            const newPw = document.getElementById('new-password').value;
+            const confirmPw = document.getElementById('confirm-password').value;
+
+            if (newPw !== confirmPw) {
+                showToast('Passwords do not match!', 'error');
+                return false;
+            }
+            if (newPw.length < 4) {
+                showToast('Password must be at least 4 characters!', 'error');
+                return false;
+            }
+
+            return true; // Allow form submission to proceed
+        }
+
+        // Toast notification system
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<span>${type === 'success' ? '✅' : '❌'}</span> ${message}`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(40px)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Animate progress bars on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const bars = document.querySelectorAll('.progress-fill');
+            bars.forEach(bar => {
+                const width = bar.style.width;
+                bar.style.width = '0%';
+                setTimeout(() => { bar.style.width = width; }, 300);
+            });
+        });
+        //change password
+        function changePassword(e) {
+            e.preventDefault();
+            const currentPw = document.getElementById('current-password').value;
+            const newPw = document.getElementById('new-password').value;
+            const confirmPw = document.getElementById('confirm-password').value;
+
+            if (newPw !== confirmPw) {
+                showToast('Passwords do not match!', 'error');
+                return;
+            }
+            if (newPw.length < 4) {
+                showToast('Password must be at least 4 characters!', 'error');
+                return;
+            }
+
+            // Simulate password change success
+            document.getElementById('password-form').reset();
+            showToast('Password updated successfully!', 'success');
+        }
+
+    </script>
+
+    {% if error %}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            showToast("{{ error }}", "error");
+            // Ensure the edit form stays open so they can fix the error
+            if (!isEditing) {
+                toggleEdit();
+            }
+        });
+    </script>
+    {% endif %}
+
+    {% if request.query_params.get('pwd_changed') == '1' %}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            switchTab('settings');
+            showToast("Password updated successfully!", "success");
+        });
+    </script>
+    {% endif %}
+
+    <script>
+        function deleteUser(id) {
+            if (confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+                fetch(`/users/${id}`, {
+                    method: "DELETE"
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            showToast('Account deleted successfully. Redirecting...', 'success');
+                            setTimeout(() => { window.location.href = '/'; }, 2000);
+                        } else {
+                            showToast('Failed to delete account. Please try again.', 'error');
+                        }
+                    })
+                    .catch(() => {
+                        showToast('An error occurred while deleting the account.', 'error');
+                    });
+            }
+        }
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Student Portal</title>
+    <meta name="description" content="Sign in to the Student Management Portal to access your dashboard and profile.">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- Animated Background -->
+<div class="bg-animated">
+    <div class="orb"></div>
+    <div class="orb"></div>
+    <div class="orb"></div>
+</div>
+
+<div class="login-wrapper">
+    <div class="login-box">
+        <div class="login-icon">🎓</div>
+        <h1>Welcome Back</h1>
+        <p class="subtitle">Sign in to your student portal</p>
+
+        {% if error %}
+        <div class="alert alert-error" id="login-error">
+            <span>⚠️</span> {{ error }}
+        </div>
+        {% endif %}
+
+        <form action="/login" method="post" id="login-form">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <div class="input-wrapper">
+                    <span class="input-icon">👤</span>
+                    <input type="text" id="username" name="username" placeholder="Enter your username" required autocomplete="username">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="input-wrapper">
+                    <span class="input-icon">🔒</span>
+                    <input type="password" id="password" name="password" placeholder="Enter your password" required autocomplete="current-password">
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="login-btn">
+                Sign In →
+            </button>
+        </form>
+
+        <p style="margin-top: 24px; font-size: 12px; color: var(--text-muted);">
+            Demo: <strong style="color: var(--text-secondary);">sai / 1234</strong>
+        </p>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const theme = localStorage.getItem('theme-gradient');
+        if (theme) {
+            document.documentElement.style.setProperty('--accent-gradient', theme);
+        }
+        const disableOrbs = localStorage.getItem('disable-orbs-animation') === 'true';
+        if (disableOrbs) {
+            const orbs = document.querySelectorAll('.bg-animated');
+            orbs.forEach(el => el.style.display = 'none');
+        }
+    });
+</script>
+</body>
+</html>

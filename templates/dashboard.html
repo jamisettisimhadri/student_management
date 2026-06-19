@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Student Portal</title>
+    <meta name="description" content="Student Management Dashboard – overview of students, courses, and activity.">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+    <!-- Animated Background -->
+    <div class="bg-animated">
+        <div class="orb"></div>
+        <div class="orb"></div>
+        <div class="orb"></div>
+    </div>
+    
+    <div class="app-layout">
+        <!-- Sidebar -->
+         
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="/dashboard" class="sidebar-brand">
+                    <div class="brand-icon">🎓</div>
+                    <div>
+                        <div class="brand-text">EduPortal</div>
+                        <div class="brand-sub">Student Management</div>
+                    </div>
+                </a>
+            </div>
+           
+            <nav class="sidebar-nav">
+                
+                <div class="nav-section-title">Main</div>
+                <a href="/dashboard?user={{ username }}" class="nav-item active" id="nav-dashboard">
+                    <span class="nav-icon">📊</span> Dashboard
+                </a>
+                <a href="/profile?user={{ username }}" class="nav-item" id="nav-profile">
+                    <span class="nav-icon">👤</span> My Profile
+                </a>
+                <a href="/students?user={{ username }}" class="nav-item" id="nav-students">
+                    <span class="nav-icon">👥</span> Students
+                    <span class="nav-badge">{{ total_students }}</span>
+                </a>
+
+                <div class="nav-section-title">Academics</div>
+                <a href="/courses?user={{ username }}" class="nav-item" id="nav-courses">
+                    <span class="nav-icon">📚</span> Courses
+                </a>
+                <a href="/schedule?user={{ username }}" class="nav-item" id="nav-schedule">
+                    <span class="nav-icon">📅</span> Schedule
+                </a>
+                <a href="/grades?user={{ username }}" class="nav-item" id="nav-grades">
+                    <span class="nav-icon">📝</span> Grades
+                </a>
+
+                <div class="nav-section-title">System</div>
+                <a href="/settings?user={{ username }}" class="nav-item" id="nav-settings">
+                    <span class="nav-icon">⚙️</span> Settings
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="/profile?user={{ username }}" class="sidebar-user" id="sidebar-user-link">
+                    <div class="user-avatar">{{ username[0]|upper }}</div>
+                    <div class="user-info">
+                        <div class="user-name">{{ username }}</div>
+                        <div class="user-role">Administrator</div>
+                    </div>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <h2>Dashboard</h2>
+                </div>
+                <div class="topbar-right">
+                    <button class="topbar-btn" id="btn-notifications" title="Notifications">
+                        🔔
+                        <span class="badge-dot"></span>
+                    </button>
+                    <button class="topbar-btn" id="btn-search" title="Search">🔍</button>
+                    <a href="/" class="topbar-btn" id="btn-logout" title="Logout">🚪</a>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <!-- Welcome Banner -->
+                <div style="margin-bottom: 28px; animation: fadeInUp 0.5s ease both;">
+                    <h1 style="font-size: 28px; font-weight: 700; margin-bottom: 4px;">
+                        Welcome back, <span
+                            style="background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{{
+                            username }}</span> 👋
+                    </h1>
+                    <p style="color: var(--text-secondary); font-size: 15px;">Here's what's happening with your students
+                        today.</p>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon blue">👥</div>
+                            <span class="stat-trend up">↑ 12%</span>
+                        </div>
+                        <div class="stat-value">{{ total_students }}</div>
+                        <div class="stat-label">Total Students</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon green">📚</div>
+                            <span class="stat-trend up">↑ 8%</span>
+                        </div>
+                        <div class="stat-value">{{ active_courses }}</div>
+                        <div class="stat-label">Active Courses</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon purple">🏆</div>
+                            <span class="stat-trend up">↑ 5%</span>
+                        </div>
+                        <div class="stat-value">{{ pass_rate }}</div>
+                        <div class="stat-label">Pass Rate</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div class="stat-icon amber">⏰</div>
+                            <span class="stat-trend down">↓ 3%</span>
+                        </div>
+                        <div class="stat-value">14</div>
+                        <div class="stat-label">Pending Tasks</div>
+                    </div>
+                </div>
+
+                <!-- Dashboard Grid -->
+                <div class="dashboard-grid">
+                    <!-- Recent Students -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Recent Students</h3>
+                            <a href="/students" class="card-action">View All →</a>
+                        </div>
+                        <table class="data-table" id="students-table">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Course</th>
+                                    <th>Status</th>
+                                    <th>Grade</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                <tr>
+                                    <td>
+                                        <div class="student-cell">
+                                            {% set name_parts = student.name.split(' ') %}
+                                            {% set initials = (name_parts[0][0]|upper if name_parts|length > 0 else '')
+                                            + (name_parts[1][0]|upper if name_parts|length > 1 else '') %}
+                                            <div class="student-avatar av-{{ loop.index0 % 5 + 1 }}">{{ initials }}
+                                            </div>
+                                            <div>
+                                                <div class="student-name">{{ student.name }}</div>
+                                                <div class="student-email">{{ student.email }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ student.course }}</td>
+                                    <td><span class="status-badge {{ student.status.lower() }}">{{ student.status
+                                            }}</span></td>
+                                    <td>{{ student.grade if student.grade else '-' }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="4"
+                                        style="text-align: center; color: var(--text-muted); padding: 24px;">No students
+                                        found. Add some to get started!</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div>
+                        <!-- Activity Feed -->
+                        <div class="card" style="margin-bottom: 24px;">
+                            <div class="card-header">
+                                <h3>Recent Activity</h3>
+                            </div>
+                            <div class="card-body">
+                                <ul class="activity-list" id="activity-feed">
+                                    <li class="activity-item">
+                                        <div class="activity-dot blue"></div>
+                                        <div>
+                                            <div class="activity-text"><strong>Arjun Patel</strong> submitted assignment
+                                                for CS-301</div>
+                                            <div class="activity-time">2 minutes ago</div>
+                                        </div>
+                                    </li>
+                                    <li class="activity-item">
+                                        <div class="activity-dot green"></div>
+                                        <div>
+                                            <div class="activity-text"><strong>Sara Khan</strong> completed Data Science
+                                                quiz</div>
+                                            <div class="activity-time">15 minutes ago</div>
+                                        </div>
+                                    </li>
+                                    <li class="activity-item">
+                                        <div class="activity-dot purple"></div>
+                                        <div>
+                                            <div class="activity-text">New course <strong>Machine Learning</strong>
+                                                added</div>
+                                            <div class="activity-time">1 hour ago</div>
+                                        </div>
+                                    </li>
+                                    <li class="activity-item">
+                                        <div class="activity-dot amber"></div>
+                                        <div>
+                                            <div class="activity-text"><strong>3 students</strong> pending approval
+                                            </div>
+                                            <div class="activity-time">3 hours ago</div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Quick Actions -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Quick Actions</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="quick-actions" id="quick-actions">
+                                    <button class="quick-action-btn" onclick="openStudentModal()">
+                                        <span class="qa-icon">➕</span>
+                                        Add Student
+                                    </button>
+                                    <button class="quick-action-btn"
+                                        onclick="showToast('Feature coming soon!', 'success')">
+                                        <span class="qa-icon">📊</span>
+                                        Reports
+                                    </button>
+                                    <button onclick="window.location.href='/send-email'" class="quick-action-btn">
+                                       <span class="qa-icon">📧</span>
+                                        Send Email
+                                    </button>
+                                    <button onclick="window.location.href='/export-students'" class="quick-action-btn">
+                                       
+                                        <span class="qa-icon">📥</span>
+                                        Export Data
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Student Modal -->
+    <div id="studentModal" class="modal-overlay">
+        <div class="modal-content white-theme">
+            <div class="modal-header">
+                <h3>Add New Student</h3>
+                <button class="close-btn" onclick="closeStudentModal()">&times;</button>
+            </div>
+            <form id="add-student-form" onsubmit="submitStudentForm(event)">
+                <div class="modal-body">
+                    <div class="form-group-white">
+                        <label for="student-name">Your Name *</label>
+                        <input type="text" id="student-name" name="name" required placeholder="Full name">
+                    </div>
+                    <div class="form-group-white">
+                        <label for="student-email">Email Address *</label>
+                        <input type="email" id="student-email" name="email" required placeholder="Eg. example@email.com">
+                    </div>
+                    <div class="form-group-white">
+                        <label for="student-course">Course *</label>
+                        <input type="text" id="student-course" name="course" required placeholder="Eg. Computer Science">
+                    </div>
+                    <div class="form-row-white">
+                        <div class="form-group-white" style="margin-bottom:0;">
+                            <label for="student-status">Status</label>
+                            <select id="student-status" name="status">
+                                <option value="Active">Active</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
+                        </div>
+                        <div class="form-group-white" style="margin-bottom:0;">
+                            <label for="student-grade">Grade</label>
+                            <input type="text" id="student-grade" name="grade" placeholder="Eg. A+">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer-white">
+                    <button type="submit" class="btn-white-submit" id="btn-add-student-submit">
+                        Add Student &rarr;
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+        // Toast notification system
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<span>${type === 'success' ? '✅' : '❌'}</span> ${message}`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(40px)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function openStudentModal() {
+            document.getElementById('studentModal').classList.add('active');
+            document.getElementById('student-name').focus();
+        }
+
+        function closeStudentModal() {
+            document.getElementById('studentModal').classList.remove('active');
+            document.getElementById('add-student-form').reset();
+        }
+
+        // Close modal when clicking outside the white card
+        document.getElementById('studentModal').addEventListener('click', function(e) {
+            if (e.target === this) closeStudentModal();
+        });
+
+        // Submit Student Form via AJAX to backend
+        async function submitStudentForm(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch('/students/add', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    closeStudentModal();
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    showToast(data.message || 'Failed to add student.', 'error');
+                }
+            } catch (error) {
+                console.error('Error adding student:', error);
+                showToast('An error occurred. Please try again.', 'error');
+            }
+        }
+
+        // Animate stat values on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const statValues = document.querySelectorAll('.stat-value');
+            statValues.forEach(el => {
+                const finalText = el.textContent;
+                const finalNum = parseInt(finalText);
+                if (!isNaN(finalNum)) {
+                    const suffix = finalText.replace(finalNum.toString(), '');
+                    let current = 0;
+                    const increment = Math.ceil(finalNum / 40);
+                    const timer = setInterval(() => {
+                        current += increment;
+                        if (current >= finalNum) {
+                            current = finalNum;
+                            clearInterval(timer);
+                        }
+                        el.textContent = current + suffix;
+                    }, 25);
+                }
+            });
+        });
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const menuBtn = document.getElementById("menuBtn");
+            const sidebar = document.getElementById("sidebar");
+
+            if (menuBtn && sidebar) {
+                menuBtn.addEventListener("click", () => {
+                    sidebar.classList.toggle("collapsed");
+                });
+            }
+
+            // Apply theme gradients and orb settings
+            const theme = localStorage.getItem('theme-gradient');
+            if (theme) {
+                document.documentElement.style.setProperty('--accent-gradient', theme);
+            }
+            const disableOrbs = localStorage.getItem('disable-orbs-animation') === 'true';
+            if (disableOrbs) {
+                const orbs = document.querySelectorAll('.bg-animated');
+                orbs.forEach(el => el.style.display = 'none');
+            }
+        });
+    </script>
+</body>
+
+</html>
